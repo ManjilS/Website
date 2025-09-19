@@ -1,0 +1,753 @@
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+from flask_cors import CORS
+from flask_mail import Mail, Message
+import sqlite3
+from datetime import datetime
+import os
+from functools import wraps
+from werkzeug.utils import secure_filename
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx'}
+
+# Create uploads directory if it doesn't exist
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
+CORS(app)
+app.secret_key = 'necsprint-admin-secret-key-2024'  # Change this in production
+
+# Email configuration - Using a simple SMTP setup
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'coess@gmail.com')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'your-app-password')
+app.config['MAIL_DEFAULT_SENDER'] = ('NECSprint Team', 'coess@gmail.com')
+app.config['MAIL_SUPPRESS_SEND'] = False
+
+mail = Mail(app)
+
+# Admin credentials (in production, use environment variables or database)
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'necsprint2024')
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_logged_in' not in session:
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def init_db():
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS registrations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            team_name TEXT NOT NULL,
+            leader_name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            university TEXT NOT NULL,
+            experience_level TEXT NOT NULL,
+            theme TEXT NOT NULL,
+            team_members TEXT,
+            registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Add team_members column if it doesn't exist
+    try:
+        cursor.execute('ALTER TABLE registrations ADD COLUMN team_members TEXT')
+        conn.commit()
+    except sqlite3.OperationalError:
+        # Column already exists
+        pass
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS submissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            team_name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            project_title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            github_url TEXT NOT NULL,
+            demo_url TEXT,
+            video_url TEXT,
+            theme TEXT NOT NULL,
+            presentation_file TEXT,
+            submission_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS announcements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS notices (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content TEXT NOT NULL,
+            file_path TEXT,
+            original_filename TEXT,
+            is_active BOOLEAN DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Add new columns to existing notices table if they don't exist
+    try:
+        cursor.execute('ALTER TABLE notices ADD COLUMN file_path TEXT')
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+    
+    try:
+        cursor.execute('ALTER TABLE notices ADD COLUMN original_filename TEXT')
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS documents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT,
+            filename TEXT NOT NULL,
+            original_filename TEXT NOT NULL,
+            file_type TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/admin')
+def admin():
+    return redirect(url_for('admin_login'))
+
+@app.route('/admin/login')
+def admin_login():
+    if 'admin_logged_in' in session:
+        return redirect(url_for('admin_dashboard'))
+    return render_template('login.html')
+
+@app.route('/admin/login', methods=['POST'])
+def admin_login_post():
+    data = request.get_json()
+    
+    if data['username'] == ADMIN_USERNAME and data['password'] == ADMIN_PASSWORD:
+        session['admin_logged_in'] = True
+        return jsonify({'success': True, 'message': 'Login successful'})
+    else:
+        return jsonify({'success': False, 'message': 'Invalid username or password'})
+
+@app.route('/admin/dashboard')
+@login_required
+def admin_dashboard():
+    return render_template('admin.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin_logged_in', None)
+    return redirect(url_for('admin_login'))
+
+@app.route('/submit')
+def submit_page():
+    return render_template('submit.html')
+
+@app.route('/live')
+def live_updates():
+    return render_template('live.html')
+
+@app.route('/stream')
+def live_stream():
+    return render_template('stream.html')
+
+@app.route('/notices')
+def notices_page():
+    return render_template('notices.html')
+
+@app.route('/documents')
+def documents_page():
+    return render_template('documents.html')
+
+@app.route('/admin/add-notice', methods=['POST'])
+@login_required
+def add_notice():
+    content = request.form.get('content')
+    file_path = None
+    original_filename = None
+    
+    if 'file' in request.files:
+        file = request.files['file']
+        if file.filename != '' and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            unique_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            file.save(file_path)
+            original_filename = filename
+            file_path = unique_filename
+    
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO notices (content, file_path, original_filename) VALUES (?, ?, ?)', 
+                   (content, file_path, original_filename))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+@app.route('/admin/delete-notice/<int:notice_id>', methods=['DELETE'])
+@login_required
+def delete_notice(notice_id):
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM notices WHERE id = ?', (notice_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+@app.route('/admin/delete-submission/<int:submission_id>', methods=['DELETE'])
+@login_required
+def delete_submission(submission_id):
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM submissions WHERE id = ?', (submission_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/admin/upload-document', methods=['POST'])
+@login_required
+def upload_document():
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'message': 'No file selected'})
+    
+    file = request.files['file']
+    title = request.form.get('title')
+    description = request.form.get('description', '')
+    
+    if file.filename == '':
+        return jsonify({'success': False, 'message': 'No file selected'})
+    
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        unique_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        file.save(file_path)
+        
+        conn = sqlite3.connect('registrations.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO documents (title, description, filename, original_filename, file_type)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (title, description, unique_filename, filename, filename.rsplit('.', 1)[1].lower()))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Document uploaded successfully'})
+    
+    return jsonify({'success': False, 'message': 'Invalid file type. Only PDF, DOC, DOCX allowed'})
+
+@app.route('/admin/documents')
+@login_required
+def get_admin_documents():
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, title, description, original_filename, file_type, created_at FROM documents ORDER BY created_at DESC')
+    documents = [{
+        'id': row[0], 'title': row[1], 'description': row[2], 
+        'filename': row[3], 'file_type': row[4], 'created_at': row[5]
+    } for row in cursor.fetchall()]
+    conn.close()
+    return jsonify(documents)
+
+@app.route('/admin/delete-document/<int:doc_id>', methods=['DELETE'])
+@login_required
+def delete_document(doc_id):
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT filename FROM documents WHERE id = ?', (doc_id,))
+    result = cursor.fetchone()
+    
+    if result:
+        filename = result[0]
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        
+        cursor.execute('DELETE FROM documents WHERE id = ?', (doc_id,))
+        conn.commit()
+    
+    conn.close()
+    return jsonify({'success': True})
+
+@app.route('/download/notice/<int:notice_id>')
+def download_notice_file(notice_id):
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT file_path, original_filename FROM notices WHERE id = ?', (notice_id,))
+    result = cursor.fetchone()
+    conn.close()
+    
+    if result and result[0]:
+        file_path, original_filename = result
+        full_path = os.path.join(app.config['UPLOAD_FOLDER'], file_path)
+        if os.path.exists(full_path):
+            from flask import send_file
+            return send_file(full_path, as_attachment=True, download_name=original_filename)
+    
+    return jsonify({'error': 'File not found'}), 404
+
+@app.route('/notice/<int:notice_id>')
+def notice_details(notice_id):
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, content, file_path, original_filename, created_at FROM notices WHERE id = ? AND is_active = 1', (notice_id,))
+    notice = cursor.fetchone()
+    conn.close()
+    
+    if notice:
+        notice_data = {
+            'id': notice[0],
+            'content': notice[1], 
+            'file_path': notice[2],
+            'original_filename': notice[3],
+            'created_at': notice[4]
+        }
+        return render_template('notice_details.html', notice=notice_data)
+    
+    return jsonify({'error': 'Notice not found'}), 404
+
+@app.route('/view/notice/<int:notice_id>')
+def view_notice_file(notice_id):
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT file_path, original_filename FROM notices WHERE id = ?', (notice_id,))
+    result = cursor.fetchone()
+    conn.close()
+    
+    if result and result[0]:
+        file_path, original_filename = result
+        full_path = os.path.join(app.config['UPLOAD_FOLDER'], file_path)
+        if os.path.exists(full_path) and original_filename.lower().endswith('.pdf'):
+            from flask import send_file
+            return send_file(full_path, mimetype='application/pdf')
+    
+    return jsonify({'error': 'File not found or not viewable'}), 404
+
+@app.route('/api/documents')
+def get_public_documents():
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, title, description, original_filename, file_type, created_at FROM documents ORDER BY created_at DESC')
+    documents = [{
+        'id': row[0], 'title': row[1], 'description': row[2], 
+        'filename': row[3], 'file_type': row[4], 'created_at': row[5]
+    } for row in cursor.fetchall()]
+    conn.close()
+    return jsonify(documents)
+
+@app.route('/api/notices')
+def get_notices():
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT content FROM notices WHERE is_active = 1 ORDER BY created_at DESC')
+    notices = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return jsonify(notices)
+
+@app.route('/admin/notices')
+@login_required
+def get_admin_notices():
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, content, file_path, original_filename, created_at FROM notices WHERE is_active = 1 ORDER BY created_at DESC')
+    notices = [{'id': row[0], 'content': row[1], 'file_path': row[2], 'original_filename': row[3], 'created_at': row[4]} for row in cursor.fetchall()]
+    conn.close()
+    return jsonify(notices)
+
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        data = request.get_json()
+        
+        conn = sqlite3.connect('registrations.db')
+        cursor = conn.cursor()
+        
+        # Process team members
+        team_members = []
+        for i in range(1, 5):
+            name_key = f'member{i}Name'
+            email_key = f'member{i}Email'
+            if name_key in data and data[name_key]:
+                team_members.append({
+                    'name': data[name_key],
+                    'email': data.get(email_key, '')
+                })
+        
+        import json
+        team_members_json = json.dumps(team_members) if team_members else None
+        
+        cursor.execute('''
+            INSERT INTO registrations (team_name, leader_name, email, university, experience_level, theme, team_members)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            data['teamName'],
+            data['leaderName'],
+            data['email'],
+            data['university'],
+            data['experienceLevel'],
+            data['theme'],
+            team_members_json
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        # Send confirmation email to team leader
+        try:
+            msg = Message(
+                subject='NECSprint 2024 - Registration Confirmation',
+                recipients=[data['email']],
+                sender=app.config['MAIL_DEFAULT_SENDER']
+            )
+            msg.html = f'''
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: linear-gradient(135deg, #6366f1, #0ea5e9); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .content {{ background: #f8f9fa; padding: 20px; border-radius: 0 0 10px 10px; }}
+                    .details {{ background: white; padding: 15px; border-radius: 5px; margin: 15px 0; }}
+                    .footer {{ text-align: center; margin-top: 20px; color: #666; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Welcome to NECSprint 2024!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Hi <strong>{data['leaderName']}</strong>,</p>
+                        <p>Congratulations! Your team <strong>{data['teamName']}</strong> has been successfully registered for NECSprint 2024!</p>
+                        
+                        <div class="details">
+                            <h3>Registration Details:</h3>
+                            <ul>
+                                <li><strong>Team Name:</strong> {data['teamName']}</li>
+                                <li><strong>Team Leader:</strong> {data['leaderName']}</li>
+                                <li><strong>Email:</strong> {data['email']}</li>
+                                <li><strong>University:</strong> {data['university']}</li>
+                                <li><strong>Theme:</strong> {data['theme'].upper()}</li>
+                                <li><strong>Experience Level:</strong> {data['experienceLevel'].title()}</li>
+                            </ul>
+                        </div>
+                        
+                        <p>We're excited to have you participate in this amazing 48-hour hackathon! Get ready to innovate, collaborate, and build something incredible.</p>
+                        
+                        <p><strong>What's Next?</strong></p>
+                        <ul>
+                            <li>We'll send you event details and schedule soon</li>
+                            <li>Check our website for resources and updates</li>
+                            <li>Start thinking about your project ideas!</li>
+                        </ul>
+                        
+                        <div class="footer">
+                            <p>Best regards,<br><strong>NECSprint Team</strong></p>
+                            <p><small>If you have any questions, reply to this email or contact us at coess@gmail.com</small></p>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+            '''
+            
+            # Try to send email, but don't fail registration if email fails
+            mail.send(msg)
+            print(f"Confirmation email sent to {data['email']}")
+            
+        except Exception as e:
+            print(f"Email sending failed: {e}")
+            # Continue with registration even if email fails
+        
+        return jsonify({'success': True, 'message': 'Registration successful! Welcome to NECSprint 2024! Check your email for confirmation details.'})
+    
+    except sqlite3.IntegrityError:
+        return jsonify({'success': False, 'message': 'Email already registered!'})
+    except Exception as e:
+        print(f"Registration error: {e}")
+        return jsonify({'success': False, 'message': 'Registration failed!'})
+
+@app.route('/registrations', methods=['GET'])
+@login_required
+def get_registrations():
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM registrations ORDER BY registration_date DESC')
+    registrations = cursor.fetchall()
+    conn.close()
+    
+    return jsonify([{
+        'id': r[0],
+        'team_name': r[1],
+        'leader_name': r[2],
+        'email': r[3],
+        'university': r[4],
+        'experience_level': r[5],
+        'theme': r[6],
+        'team_members': r[7] if len(r) > 7 else None,
+        'registration_date': r[8] if len(r) > 8 else r[7]
+    } for r in registrations])
+
+@app.route('/admin/export')
+@login_required
+def export_registrations():
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM registrations ORDER BY registration_date DESC')
+    registrations = cursor.fetchall()
+    conn.close()
+    
+    import csv
+    import io
+    from flask import make_response
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['ID', 'Team Name', 'Leader Name', 'Email', 'University', 'Experience Level', 'Theme', 'Registration Date'])
+    
+    for reg in registrations:
+        writer.writerow(reg)
+    
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = 'attachment; filename=registrations.csv'
+    return response
+
+@app.route('/submit-project', methods=['POST'])
+def submit_project():
+    try:
+        data = request.form
+        
+        # Handle file upload
+        presentation_file = None
+        if 'presentation' in request.files:
+            file = request.files['presentation']
+            if file.filename:
+                import os
+                upload_folder = 'uploads'
+                if not os.path.exists(upload_folder):
+                    os.makedirs(upload_folder)
+                presentation_file = f"{upload_folder}/{data['teamName']}_{file.filename}"
+                file.save(presentation_file)
+        
+        conn = sqlite3.connect('registrations.db')
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO submissions (team_name, email, project_title, description, github_url, demo_url, video_url, theme, presentation_file)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            data['teamName'],
+            data['email'],
+            data['projectTitle'],
+            data['description'],
+            data['githubUrl'],
+            data.get('demoUrl', ''),
+            data.get('videoUrl', ''),
+            data['theme'],
+            presentation_file
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Project submitted successfully!'})
+    
+    except Exception as e:
+        print(f"Submission error: {e}")
+        return jsonify({'success': False, 'message': 'Submission failed!'})
+
+@app.route('/submissions')
+@login_required
+def view_submissions():
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM submissions ORDER BY submission_date DESC')
+    submissions = cursor.fetchall()
+    conn.close()
+    
+    return jsonify([{
+        'id': s[0],
+        'team_name': s[1],
+        'email': s[2],
+        'project_title': s[3],
+        'description': s[4],
+        'github_url': s[5],
+        'demo_url': s[6],
+        'video_url': s[7],
+        'theme': s[8],
+        'presentation_file': s[9],
+        'submission_date': s[10]
+    } for s in submissions])
+
+@app.route('/send-notification', methods=['POST'])
+@login_required
+def send_notification():
+    try:
+        data = request.get_json()
+        
+        conn = sqlite3.connect('registrations.db')
+        cursor = conn.cursor()
+        
+        # Get recipients based on selection
+        if data['recipients'] == 'all':
+            cursor.execute('SELECT email, leader_name FROM registrations')
+        else:
+            cursor.execute('SELECT email, leader_name FROM registrations WHERE theme = ?', (data['recipients'],))
+        
+        recipients = cursor.fetchall()
+        conn.close()
+        
+        # Send emails
+        sent_count = 0
+        for email, name in recipients:
+            try:
+                msg = Message(
+                    data['subject'],
+                    recipients=[email]
+                )
+                msg.html = f'''
+                <h2>{data['subject']}</h2>
+                <p>Hi {name},</p>
+                <p>{data['message']}</p>
+                <p>Best regards,<br>NECSprint Team</p>
+                '''
+                mail.send(msg)
+                sent_count += 1
+            except Exception as e:
+                print(f"Failed to send email to {email}: {e}")
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Notification sent to {sent_count} recipients'
+        })
+    
+    except Exception as e:
+        print(f"Notification error: {e}")
+        return jsonify({'success': False, 'message': 'Failed to send notifications'})
+
+@app.route('/admin/delete-registration/<int:registration_id>', methods=['DELETE'])
+@login_required
+def delete_registration(registration_id):
+    try:
+        conn = sqlite3.connect('registrations.db')
+        cursor = conn.cursor()
+        
+        # Check if registration exists
+        cursor.execute('SELECT id FROM registrations WHERE id = ?', (registration_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'message': 'Registration not found'})
+        
+        # Delete the registration
+        cursor.execute('DELETE FROM registrations WHERE id = ?', (registration_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Registration deleted successfully'})
+    
+    except Exception as e:
+        print(f"Delete error: {e}")
+        return jsonify({'success': False, 'message': 'Failed to delete registration'})
+
+@app.route('/admin/announcements')
+@login_required
+def get_announcements():
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM announcements ORDER BY created_at DESC')
+    announcements = cursor.fetchall()
+    conn.close()
+    
+    return jsonify([{
+        'id': a[0],
+        'title': a[1],
+        'content': a[2],
+        'created_at': a[3]
+    } for a in announcements])
+
+@app.route('/admin/add-announcement', methods=['POST'])
+@login_required
+def add_announcement():
+    try:
+        data = request.get_json()
+        
+        conn = sqlite3.connect('registrations.db')
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO announcements (title, content)
+            VALUES (?, ?)
+        ''', (data['title'], data['content']))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Announcement added successfully'})
+    
+    except Exception as e:
+        print(f"Add announcement error: {e}")
+        return jsonify({'success': False, 'message': 'Failed to add announcement'})
+
+@app.route('/admin/delete-announcement/<int:announcement_id>', methods=['DELETE'])
+@login_required
+def delete_announcement(announcement_id):
+    try:
+        conn = sqlite3.connect('registrations.db')
+        cursor = conn.cursor()
+        
+        cursor.execute('DELETE FROM announcements WHERE id = ?', (announcement_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Announcement deleted successfully'})
+    
+    except Exception as e:
+        print(f"Delete announcement error: {e}")
+        return jsonify({'success': False, 'message': 'Failed to delete announcement'})
+
+@app.route('/api/announcements')
+def public_announcements():
+    conn = sqlite3.connect('registrations.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM announcements ORDER BY created_at DESC LIMIT 10')
+    announcements = cursor.fetchall()
+    conn.close()
+    
+    return jsonify([{
+        'id': a[0],
+        'title': a[1],
+        'content': a[2],
+        'created_at': a[3]
+    } for a in announcements])
+
+if __name__ == '__main__':
+    init_db()
+    app.run(debug=True)

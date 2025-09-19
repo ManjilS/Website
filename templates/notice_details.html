@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notice Details - necSprint 2026</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .notice-details-container {
+            max-width: 1000px;
+            margin: 6rem auto 2rem;
+            padding: 2rem;
+        }
+        .notice-content {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        .notice-meta {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .file-actions {
+            display: flex;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .pdf-viewer {
+            width: 100%;
+            height: 600px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 10px;
+            background: #fff;
+        }
+        .file-info {
+            background: rgba(99, 102, 241, 0.1);
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">NECSprint 2024</div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/notices">Back to Notices</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="notice-details-container">
+        <h1>Notice Details</h1>
+        
+        <div class="notice-content">
+            <div class="notice-meta">
+                Posted: {{ notice.created_at }}
+            </div>
+            <p>{{ notice.content }}</p>
+            
+            {% if notice.file_path %}
+            <div class="file-info">
+                <strong>Attached File:</strong> {{ notice.original_filename }}
+            </div>
+            
+            <div class="file-actions">
+                {% if notice.original_filename.lower().endswith('.pdf') %}
+                <button onclick="toggleViewer()" class="btn primary">
+                    <i class="fas fa-eye"></i> <span id="viewerToggle">Show PDF</span>
+                </button>
+                {% endif %}
+                <a href="/download/notice/{{ notice.id }}" class="btn secondary">
+                    <i class="fas fa-download"></i> Download File
+                </a>
+            </div>
+            
+            {% if notice.original_filename.lower().endswith('.pdf') %}
+            <div id="pdfViewer" style="display: none;">
+                <iframe src="/view/notice/{{ notice.id }}" class="pdf-viewer"></iframe>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function toggleViewer() {
+            const viewer = document.getElementById('pdfViewer');
+            const toggle = document.getElementById('viewerToggle');
+            
+            if (viewer.style.display === 'none') {
+                viewer.style.display = 'block';
+                toggle.textContent = 'Hide PDF';
+            } else {
+                viewer.style.display = 'none';
+                toggle.textContent = 'Show PDF';
+            }
+        }
+    </script>
+</body>
+</html>

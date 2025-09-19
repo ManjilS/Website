@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Updates - necSprint 2026</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Orbitron:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='live.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">NECSprint Live</div>
+            <ul class="nav-menu">
+                <li><a href="/"><i class="fas fa-arrow-left"></i> Back to Website</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <h1 class="page-title">Live Updates & Announcements</h1>
+        
+        <div class="live-status">
+            <div class="status-indicator"></div>
+            <span>Event Status: <strong id="eventStatus">Registration Open</strong></span>
+        </div>
+
+        <div class="announcements-section">
+            <div class="section-header">
+                <i class="fas fa-bullhorn"></i>
+                <h2>Latest Announcements</h2>
+            </div>
+            <div class="announcements-container" id="announcements">
+                <div class="announcement">
+                    <div class="announcement-time"><i class="far fa-clock"></i> 2024-12-15 10:00 AM</div>
+                    <div class="announcement-content">
+                        <h3>Welcome to NECSprint 2024!</h3>
+                        <p>Registration is now open. Don't miss your chance to participate in this amazing hackathon! Teams are already signing up at a record pace.</p>
+                    </div>
+                </div>
+                <div class="announcement">
+                    <div class="announcement-time"><i class="far fa-clock"></i> 2024-12-10 2:00 PM</div>
+                    <div class="announcement-content">
+                        <h3>Mentors Announced</h3>
+                        <p>We're excited to announce our amazing lineup of mentors and judges for this year's event. Industry experts from leading tech companies will be guiding participants.</p>
+                    </div>
+                </div>
+                <div class="announcement">
+                    <div class="announcement-time"><i class="far fa-clock"></i> 2024-12-05 4:30 PM</div>
+                    <div class="announcement-content">
+                        <h3>Theme Reveal Coming Soon</h3>
+                        <p>Stay tuned for the big theme reveal next week. We have some exciting challenges prepared for all participants!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="event-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="liveRegistrations">0</div>
+                <div>Teams Registered</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="timeRemaining">--</div>
+                <div>Time Until Event</div>
+                <div class="countdown" id="countdown">
+                    <div class="countdown-unit">
+                        <div class="countdown-value" id="days">--</div>
+                        <div class="countdown-label">Days</div>
+                    </div>
+                    <div class="countdown-unit">
+                        <div class="countdown-value" id="hours">--</div>
+                        <div class="countdown-label">Hours</div>
+                    </div>
+                    <div class="countdown-unit">
+                        <div class="countdown-value" id="minutes">--</div>
+                        <div class="countdown-label">Minutes</div>
+                    </div>
+                    <div class="countdown-unit">
+                        <div class="countdown-value" id="seconds">--</div>
+                        <div class="countdown-label">Seconds</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='live.js') }}"></script>
+</body>
+</html>

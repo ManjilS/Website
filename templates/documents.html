@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documents - NECSprint 2024</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .documents-container {
+            max-width: 800px;
+            margin: 6rem auto 2rem;
+            padding: 2rem;
+        }
+        .document-item {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        .document-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .document-title {
+            color: var(--secondary);
+            margin: 0;
+        }
+        .download-btn {
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+        .download-btn:hover {
+            background: var(--primary-dark);
+        }
+        .file-info {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">NECSprint 2024</div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/live">Live Updates</a></li>
+                <li><a href="/notices">Notices</a></li>
+                <li><a href="/documents" class="active">Documents</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="documents-container">
+        <h1>Event Documents</h1>
+        <div id="documentsList">
+            <p>Loading documents...</p>
+        </div>
+    </div>
+
+    <script>
+        async function loadDocuments() {
+            try {
+                const response = await fetch('/api/documents');
+                const documents = await response.json();
+                const container = document.getElementById('documentsList');
+                
+                if (documents.length === 0) {
+                    container.innerHTML = '<p>No documents available at the moment.</p>';
+                    return;
+                }
+                
+                container.innerHTML = documents.map(doc => `
+                    <div class="document-item">
+                        <div class="document-header">
+                            <h3 class="document-title">${doc.title}</h3>
+                            <a href="/download/${doc.id}" class="download-btn">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                        </div>
+                        <p>${doc.description || 'No description available'}</p>
+                        <div class="file-info">
+                            <i class="fas fa-file-${doc.file_type === 'pdf' ? 'pdf' : 'word'}"></i>
+                            ${doc.filename} • Uploaded: ${new Date(doc.created_at).toLocaleDateString()}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('documentsList').innerHTML = '<p>Error loading documents.</p>';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadDocuments);
+    </script>
+</body>
+</html>

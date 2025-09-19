@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notices - necSprint 2026</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .notices-container {
+            max-width: 800px;
+            margin: 6rem auto 2rem;
+            padding: 2rem;
+        }
+        .notice-item {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        .notice-time {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">NECSprint 2024</div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/live">Live Updates</a></li>
+                <li><a href="/notices" class="active">Notices</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="notices-container">
+        <h1>Official Notices</h1>
+        <div id="noticesList">
+            <p>Loading notices...</p>
+        </div>
+    </div>
+
+    <script>
+        async function loadNotices() {
+            try {
+                const response = await fetch('/api/notices');
+                const notices = await response.json();
+                const container = document.getElementById('noticesList');
+                
+                if (notices.length === 0) {
+                    container.innerHTML = '<p>No notices available at the moment.</p>';
+                    return;
+                }
+                
+                const response2 = await fetch('/admin/notices');
+                const fullNotices = await response2.json();
+                
+                container.innerHTML = fullNotices.map(notice => `
+                    <div class="notice-item">
+                        <div class="notice-time">${new Date(notice.created_at).toLocaleString()}</div>
+                        <div>${notice.content}</div>
+                        ${notice.file_path ? `<div style="margin-top: 0.5rem;"><a href="/notice/${notice.id}" class="download-btn"><i class="fas fa-info-circle"></i> View Details</a></div>` : ''}
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('noticesList').innerHTML = '<p>Error loading notices.</p>';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadNotices);
+    </script>
+</body>
+</html>
