@@ -3,34 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>necSprint - Hackathon 2026</title>
+    <title>TechSprint - Hackathon 2026</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Orbitron:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <div class="logo">necSprint</div>
+            <div class="logo">TechSprint</div>
             <ul class="nav-menu">
                 <li><a href="#home">Home</a></li>
                 <li><a href="#about">About</a></li>
                 <li><a href="#themes">Themes</a></li>
                 <li><a href="#sponsors">Sponsors</a></li>
-                <li><a href="#mentors">Mentors</a></li>
+                <li><a href="#mentors">Judges</a></li>
                 <li><a href="/notices">Notices</a></li>
-                <li><a href="#register" class="register-btn">Register</a></li>
+                <li><a href="/register" class="register-btn">Register</a></li>
             </ul>
         </div>
     </nav>
 
-    <div class="notice-marquee" id="noticeMarquee" style="display: none;">
-        <div class="marquee-content" id="marqueeContent"></div>
-    </div>
 
     <section id="home" class="hero">
         <div class="hero-content">
-            <h1>necSprint 2026</h1>
+            <h1>TechSprint 2026</h1>
             <p>48 Hours of Innovation, Coding, and Creativity</p>
             <div class="countdown-timer">
                 <div class="timer-item">
@@ -51,25 +48,15 @@
                 </div>
             </div>
             <div class="hero-buttons">
-                <a href="#register" class="btn primary">Register Now</a>
+                <a href="/register" class="btn primary">Register Now</a>
                 <a href="#about" class="btn secondary">Learn More</a>
             </div>
         </div>
     </section>
 
-    <section id="notices" class="notices-section">
-        <div class="container">
-            <h2>Latest Notices</h2>
-            <div id="homeNoticesList">
-                <p>Loading notices...</p>
-            </div>
-            <div style="text-align: center; margin-top: 2rem;">
-                <a href="/notices" class="btn secondary">View All Notices</a>
-            </div>
-        </div>
-    </section>
+    
 
-    <section id="about" class="about">
+<section id="about" class="about">
         <div class="container">
             <h2>About necSprint 2026</h2>
             <p>Join developers, designers, and innovators for an intensive 48-hour hackathon where creativity meets technology. Build solutions that matter.</p>
@@ -92,6 +79,7 @@
             </div>
         </div>
     </section>
+    
 
     <section id="themes" class="themes">
         <div class="container">
@@ -101,12 +89,27 @@
                 <div class="theme">
                     <i class="fas fa-chart-line"></i>
                     <h3>FinTech</h3>
-                    <p>Revolutionary financial technology solutions for banking, payments, and investment platforms</p>
+                    <p>Payments, banking, and inclusive finance solutions.</p>
                 </div>
                 <div class="theme">
-                    <i class="fas fa-robot"></i>
-                    <h3>AI/ML</h3>
-                    <p>Artificial Intelligence and Machine Learning applications that solve real-world problems</p>
+                    <i class="fas fa-lightbulb"></i>
+                    <h3>Open Innovation</h3>
+                    <p>Bold ideas across any domain. Surprise us.</p>
+                </div>
+                <div class="theme">
+                    <i class="fas fa-microchip"></i>
+                    <h3>IoT</h3>
+                    <p>Smart, connected systems for real-world impact.</p>
+                </div>
+                <div class="theme">
+                    <i class="fas fa-landmark"></i>
+                    <h3>E-Governance</h3>
+                    <p>Digital public services, transparency, and accessibility.</p>
+                </div>
+                <div class="theme">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h3>Education</h3>
+                    <p>Tech for learning, assessment, and student success.</p>
                 </div>
             </div>
         </div>
@@ -115,21 +118,10 @@
     <section id="schedule" class="schedule">
         <div class="container">
             <h2>Event Schedule</h2>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <h3>Day 1 - Friday</h3>
-                    <p>6:00 PM - Opening Ceremony & Team Formation</p>
-                </div>
-                <div class="timeline-item">
-                    <h3>Day 2 - Saturday</h3>
-                    <p>9:00 AM - Hacking Begins</p>
-                    <p>12:00 PM - Lunch & Workshops</p>
-                </div>
-                <div class="timeline-item">
-                    <h3>Day 3 - Sunday</h3>
-                    <p>2:00 PM - Project Submissions</p>
-                    <p>4:00 PM - Presentations & Awards</p>
-                </div>
+            <div class="announcement-card">
+               <h3>Schedule Announcement</h3>
+               <p>The final event schedule will be announced via email to selected teams. Please ensure the team leader's email is correct and check your inbox (and spam folder) for updates.</p>
+               <p>Selected participants will receive the itinerary, onboarding details, and next steps.</p>
             </div>
         </div>
     </section>
@@ -138,17 +130,10 @@
         <div class="container">
             <h2>Prizes & Awards</h2>
             <div class="prize-grid">
-                <div class="prize">
-                    <h3>1st Place</h3>
-                    <p>$5,000 + Mentorship</p>
-                </div>
-                <div class="prize">
-                    <h3>2nd Place</h3>
-                    <p>$3,000 + Tech Swag</p>
-                </div>
-                <div class="prize">
-                    <h3>3rd Place</h3>
-                    <p>$1,000 + Certificates</p>
+                <div class="prize prize-pool">
+                    <h3>Total Prize Pool</h3>
+                    <p>NRS 1 Lakh</p>
+                    <div class="prize-note">Detailed breakdown will be revealed soon.</div>
                 </div>
             </div>
         </div>
@@ -159,20 +144,47 @@
             <h2>Frequently Asked Questions</h2>
             <div class="faq-grid">
                 <div class="faq-item">
-                    <h3>What is the team size limit?</h3>
-                    <p>Teams can have 2-5 members. Individual participation is also allowed.</p>
+                    <h3>Who can participate?</h3>
+                    <p>Students and enthusiasts passionate about building great products.</p>
                 </div>
                 <div class="faq-item">
-                    <h3>What should I bring?</h3>
-                    <p>Bring your laptop, chargers, and any hardware you might need. We'll provide food and drinks.</p>
+                    <h3>Team size?</h3>
+                    <p>2–5 members per team. Solo registration isn't allowed; if you sign up solo, we'll match you with a team.</p>
                 </div>
                 <div class="faq-item">
-                    <h3>Is there a registration fee?</h3>
-                    <p>No, NECSprint is completely free to participate.</p>
+                    <h3>Registration fee?</h3>
+                    <p>NRS 2000 per team, payable during onboarding.</p>
                 </div>
                 <div class="faq-item">
-                    <h3>What are the judging criteria?</h3>
-                    <p>Projects will be judged on innovation, technical implementation, presentation, and potential impact.</p>
+                    <h3>When is the schedule shared?</h3>
+                    <p>Final schedule will be emailed to selected teams.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Meals and lunches?</h3>
+                    <p>Yes, all meals and lunches will be provided throughout the hackathon.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Entertainment?</h3>
+                    <p>Expect music, mini‑games, late‑night chill zones, and surprise activities to keep the vibes high.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+     <section class="faq essentials">
+        <div class="container">
+            <h2>Participant Essentials</h2>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <h3>Bring</h3>
+                    <p>Laptop, chargers, required accessories, and valid ID card.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Prepare</h3>
+                    <p>GitHub account, project idea, and team setup (2–5 members).</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Onboarding</h3>
+                    <p>Pay the registration fee (NRS 2000) and follow emailed schedule.</p>
                 </div>
             </div>
         </div>
@@ -181,230 +193,78 @@
     <section id="sponsors" class="sponsors">
         <div class="container">
             <h2>Our Sponsors</h2>
-            <p>Thanks to our amazing sponsors who make NECSprint possible</p>
-            <div class="sponsors-grid">
-                <div class="sponsor">
-                    <div class="sponsor-logo">
-                        <img src="{{ url_for('static', filename='techcrop.png') }}" alt="TechCorp Logo" style="height: 60px;">
-                    </div>
-                    <p>Leading technology solutions provider</p>
-                </div>
-                <div class="sponsor">
-                    <div class="sponsor-logo">InnovateLab</div>
-                    <p>Innovation and startup incubator</p>
-                </div>
-                <div class="sponsor">
-                    <div class="sponsor-logo">CodeAcademy</div>
-                    <p>Online coding education platform</p>
-                </div>
-                <div class="sponsor">
-                    <div class="sponsor-logo">DevTools</div>
-                    <p>Developer tools and services</p>
-                </div>
+            <div class="coming-soon-card">
+                <div class="glow-text">Revealing Soon</div>
+                <p>Our sponsor lineup will be announced shortly. Stay tuned!</p>
             </div>
         </div>
     </section>
 
     <section id="mentors" class="mentors">
         <div class="container">
-            <h2>Mentors & Judges</h2>
-            <p>Learn from industry experts and get guidance from experienced professionals</p>
-            <div class="mentors-grid">
-                <div class="mentor">
-                    <div class="mentor-avatar">JS</div>
-                    <h3>John Smith</h3>
-                    <p class="mentor-title">Senior Software Engineer at Google</p>
-                    <p>10+ years in AI/ML and cloud computing</p>
-                </div>
-                <div class="mentor">
-                    <div class="mentor-avatar">AD</div>
-                    <h3>Alice Davis</h3>
-                    <p class="mentor-title">FinTech Startup Founder</p>
-                    <p>Expert in blockchain and financial systems</p>
-                </div>
-                <div class="mentor">
-                    <div class="mentor-avatar">MJ</div>
-                    <h3>Mike Johnson</h3>
-                    <p class="mentor-title">Product Manager at Microsoft</p>
-                    <p>Specializes in user experience and product strategy</p>
-                </div>
-                <div class="mentor">
-                    <div class="mentor-avatar">SL</div>
-                    <h3>Sarah Lee</h3>
-                    <p class="mentor-title">CTO at TechStart</p>
-                    <p>Full-stack development and system architecture</p>
-                </div>
+            <h2>Judges</h2>
+            <div class="coming-soon-card">
+                <div class="glow-text">Revealing Soon</div>
+                <p>Our panel of judges will be announced closer to the event.</p>
             </div>
         </div>
     </section>
 
-    <section id="resources" class="resources">
-        <div class="container">
-            <h2>Resources & Tools</h2>
-            <p>Everything you need to build amazing projects during the hackathon</p>
-            <div class="resources-grid">
-                <div class="resource-category">
-                    <h3><i class="fas fa-code"></i> APIs & Services</h3>
-                    <ul>
-                        <li>OpenAI GPT API</li>
-                        <li>Google Cloud Platform</li>
-                        <li>AWS Free Tier</li>
-                        <li>Stripe Payment API</li>
-                        <li>Firebase Database</li>
-                    </ul>
-                </div>
-                <div class="resource-category">
-                    <h3><i class="fas fa-database"></i> Datasets</h3>
-                    <ul>
-                        <li>Financial Market Data</li>
-                        <li>Public Government APIs</li>
-                        <li>Healthcare Datasets</li>
-                        <li>Social Media Analytics</li>
-                        <li>IoT Sensor Data</li>
-                    </ul>
-                </div>
-                <div class="resource-category">
-                    <h3><i class="fas fa-tools"></i> Development Tools</h3>
-                    <ul>
-                        <li>GitHub Pro Accounts</li>
-                        <li>JetBrains IDEs</li>
-                        <li>Figma Pro</li>
-                        <li>Postman Team</li>
-                        <li>Docker Desktop</li>
-                    </ul>
-                </div>
-                <div class="resource-category">
-                    <h3><i class="fas fa-graduation-cap"></i> Learning Materials</h3>
-                    <ul>
-                        <li>API Documentation</li>
-                        <li>Tutorial Videos</li>
-                        <li>Code Examples</li>
-                        <li>Best Practices Guide</li>
-                        <li>Troubleshooting Tips</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <section id="register" class="register">
-        <div class="container">
-            <h2>Register for NECSprint</h2>
-            <form class="registration-form" id="registrationForm">
-                <input type="text" name="teamName" placeholder="Team Name" required>
-                <input type="text" name="leaderName" placeholder="Leader Name" required>
-                <input type="email" name="email" placeholder="Leader Email Address" required>
-                <input type="text" name="university" placeholder="University/College Name" required>
-                
-                <div class="team-members-section">
-                    <h3>Team Members (Optional - Max 4 additional members)</h3>
-                    <div id="teamMembers">
-                        <div class="member-input">
-                            <input type="text" name="member1Name" placeholder="Member 2 Name">
-                            <input type="email" name="member1Email" placeholder="Member 2 Email">
-                        </div>
-                    </div>
-                    <button type="button" id="addMember" class="btn secondary">Add Member</button>
-                </div>
-                
-                <select name="experienceLevel" required>
-                    <option value="">Select Experience Level</option>
-                    <option value="beginner">Beginner</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="advanced">Advanced</option>
-                </select>
-                <select name="theme" required>
-                    <option value="">Select Theme</option>
-                    <option value="fintech">FinTech</option>
-                    <option value="aiml">AI/ML</option>
-                </select>
-                <button type="submit" class="btn primary">Register Now</button>
-            </form>
+    <!-- Call-to-Action instead of inline register form -->
+    <section class="cta-section">
+        <div class="container" style="text-align:center;">
+            <h2>Ready to build something awesome?</h2>
+            <p style="color:#cbd5e1; max-width:720px; margin:0.5rem auto 1.25rem;">What are you waiting for join TechSprint and turn ideas into reality.
+            Team up, code hard, and have fun along the way.</p>
+            <a class="btn primary" href="/register" style="font-weight:700; padding:1rem 2.25rem;">Register Now</a>
         </div>
     </section>
 
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="footer-section">
-                    <h3>Quick Links</h3>
-                    <ul>
-                        <li><a href="/submit">Submit Project</a></li>
-                        <li><a href="/live">Live Updates</a></li>
-                        <li><a href="/admin">Admin Panel</a></li>
-                    </ul>
+                
+            </div>
+            
+            <!-- Footer Venue + Contact -->
+            <div class="footer-extra">
+                <div class="footer-map">
+                    <h3>Event Venue</h3>
+                    <p class="footer-venue-name">Nepal Engineering College, Changunarayan</p>
+                    <div class="footer-map-card">
+                        <iframe title="Nepal Engineering College Map (Footer)" src="https://www.google.com/maps?q=Nepal%20Engineering%20College,%20Changunarayan&output=embed" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
                 </div>
-                <div class="footer-section">
+                <div class="footer-contact">
                     <h3>Contact</h3>
-                    <p>Email: coess@nec.edu.np</p>
-                    <p>Phone: ....</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Follow Us</h3>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-linkedin"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    <div class="contact-block">
+                        <div class="contact-item">
+                            <span class="contact-label">Email</span>
+                            <a href="mailto:coess@nec.edu.np" class="contact-value">coess@nec.edu.np</a>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-label">Secondary Email</span>
+                            <a href="mailto:technicalcoess@nec.edu.np" class="contact-value">technicalcoess@nec.edu.np</a>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-label">Phone</span>
+                            <div class="contact-value">Komal Adhikari (COESS President)<br>+977 976-7556022</div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 NECSprint. All rights reserved.</p>
+                <p>&copy; 2026 TechSprint. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
+    
+
+    <!-- Participant Essentials -->
+   
+
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-    <script>
-        // Fetch and display notices
-        async function loadNotices() {
-            try {
-                const response = await fetch('/api/notices');
-                const notices = await response.json();
-                
-                if (notices.length > 0) {
-                    const marquee = document.getElementById('noticeMarquee');
-                    const content = document.getElementById('marqueeContent');
-                    content.textContent = notices.join(' • ');
-                    marquee.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Error loading notices:', error);
-            }
-        }
-        
-        // Load notices on page load
-        document.addEventListener('DOMContentLoaded', loadNotices);
-        
-        // Load notices for homepage
-        async function loadHomeNotices() {
-            try {
-                const response = await fetch('/admin/notices');
-                const notices = await response.json();
-                const container = document.getElementById('homeNoticesList');
-                
-                if (notices.length === 0) {
-                    container.innerHTML = '<p>No notices available at the moment.</p>';
-                    return;
-                }
-                
-                // Show only first 3 notices
-                const recentNotices = notices.slice(0, 3);
-                
-                container.innerHTML = recentNotices.map(notice => `
-                    <div class="notice-item" style="background: rgba(30, 41, 59, 0.5); padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem; border: 1px solid rgba(99, 102, 241, 0.2);">
-                        <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.5rem;">${new Date(notice.created_at).toLocaleString()}</div>
-                        <div>${notice.content}</div>
-                        ${notice.file_path ? `<div style="margin-top: 0.5rem;"><a href="/notice/${notice.id}" class="btn primary" style="font-size: 0.9rem; padding: 0.5rem 1rem;"><i class="fas fa-info-circle"></i> View Details</a></div>` : ''}
-                    </div>
-                `).join('');
-            } catch (error) {
-                document.getElementById('homeNoticesList').innerHTML = '<p>Error loading notices.</p>';
-            }
-        }
-        
-        // Load home notices on page load
-        document.addEventListener('DOMContentLoaded', loadHomeNotices);
-    </script>
 </body>
 </html>

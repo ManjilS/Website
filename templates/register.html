@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register | TechSprint</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <style>
+    .register-page {
+      min-height: 100vh;
+      background: var(--darker);
+      padding-top: 120px;
+      padding-bottom: 60px;
+    }
+    .register-card {
+      max-width: 780px;
+      margin: 0 auto;
+      background: rgba(30, 41, 59, 0.55);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+    .register-header {
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+    .register-header h1 {
+      margin: 0 0 0.5rem 0;
+      background: var(--gradient);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .register-subtext { color: #cbd5e1; }
+    .inline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 800px){ .inline-grid { grid-template-columns: 1fr; } }
+    .file-input {
+      padding: 1rem; border: 1px solid rgba(99,102,241,0.3); border-radius: 8px; color: #cbd5e1; background: rgba(15,23,42,0.5);
+    }
+    .note { color:#94a3b8; font-size: 0.9rem; margin-top: .25rem; }
+    .pill { display:inline-block; padding:.6rem 1.2rem; border-radius:999px; background:var(--gradient); color:#fff; text-decoration:none; font-weight:700; box-shadow:0 8px 24px rgba(99,102,241,.35); }
+    .center { text-align:center; margin-top:1rem; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="logo">TechSprint</div>
+      <ul class="nav-menu">
+        <li><a href="/">Home</a></li>
+        <li><a href="/">About</a></li>
+        <li><a href="/">Themes</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="register-page">
+    <div class="register-card">
+      <div class="register-header">
+        <h1>Join TechSprint</h1>
+        <p class="register-subtext">48 hours. Big ideas. Build with brilliant people.</p>
+      </div>
+
+      <form id="registrationForm" class="registration-form" enctype="multipart/form-data">
+        <div class="inline-grid">
+          <input type="text" name="teamName" placeholder="Team Name" required>
+          <input type="text" name="leaderName" placeholder="Leader Name" required>
+        </div>
+        <div class="inline-grid">
+          <input type="email" name="email" placeholder="Leader Email Address" required>
+          <input type="text" name="university" placeholder="University/College Name" required>
+        </div>
+
+        <div class="team-members-section">
+          <h3>Team Members (Optional - Max 4 additional members)</h3>
+          <div id="teamMembers">
+            <div class="member-input">
+              <input type="text" name="member1Name" placeholder="Member 2 Name">
+              <input type="email" name="member1Email" placeholder="Member 2 Email">
+            </div>
+          </div>
+          <button type="button" id="addMember" class="btn secondary">Add Member</button>
+        </div>
+
+        <div class="inline-grid">
+          <select name="experienceLevel" required>
+            <option value="">Select Experience Level</option>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
+          <select name="theme" required>
+            <option value="">Select Theme</option>
+            <option value="fintech">FinTech</option>
+            <option value="open-innovation">Open Innovation</option>
+            <option value="iot">IoT</option>
+            <option value="e-governance">E-Governance</option>
+            <option value="education">Education</option>
+          </select>
+        </div>
+
+        <div class="inline-grid">
+          <input type="url" name="githubLink" placeholder="GitHub Repository (optional)">
+          <input type="file" name="proposal" class="file-input" accept=".pdf,.doc,.docx" />
+        </div>
+        <div class="note">Attach your proposal as PDF, DOC, or DOCX (optional). GitHub link is optional.</div>
+
+        <button type="submit" class="btn primary" style="margin-top: 1rem;">Submit Registration</button>
+      </form>
+
+      <div class="center">
+        <a class="pill" href="/">Back to Home</a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Team members add/remove
+    let memberCount = 1;
+    const addBtn = document.getElementById('addMember');
+    addBtn.addEventListener('click', () => {
+      if (memberCount < 4) {
+        memberCount++;
+        const wrap = document.createElement('div');
+        wrap.className = 'member-input';
+        wrap.innerHTML = `
+          <input type="text" name="member${memberCount}Name" placeholder="Member ${memberCount + 1} Name">
+          <input type="email" name="member${memberCount}Email" placeholder="Member ${memberCount + 1} Email">
+        `;
+        document.getElementById('teamMembers').appendChild(wrap);
+        if (memberCount === 4) addBtn.style.display = 'none';
+      }
+    });
+
+    // Submit as multipart/form-data
+    document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget;
+      const data = new FormData(form);
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const original = submitBtn.textContent; submitBtn.textContent = 'Submitting...'; submitBtn.disabled = true;
+      try {
+        const res = await fetch('/register', { method: 'POST', body: data });
+        const out = await res.json();
+        if (out.success) {
+          alert(out.message || 'Registered successfully!');
+          form.reset();
+          memberCount = 1; document.getElementById('teamMembers').innerHTML = `
+            <div class="member-input">
+              <input type="text" name="member1Name" placeholder="Member 2 Name">
+              <input type="email" name="member1Email" placeholder="Member 2 Email">
+            </div>`;
+          addBtn.style.display = 'inline-block';
+        } else {
+          alert('Registration failed: ' + (out.message || 'please try again'));
+        }
+      } catch(err) {
+        console.error(err);
+        alert('Registration failed. Please try again.');
+      } finally {
+        submitBtn.textContent = original; submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
