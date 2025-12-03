@@ -55,6 +55,8 @@ def init_db():
             experience_level TEXT NOT NULL,
             theme TEXT NOT NULL,
             team_members TEXT,
+            github_link TEXT,
+            proposal_file TEXT,
             registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -65,6 +67,18 @@ def init_db():
         conn.commit()
     except sqlite3.OperationalError:
         # Column already exists
+        pass
+    # Add github_link column if it doesn't exist
+    try:
+        cursor.execute('ALTER TABLE registrations ADD COLUMN github_link TEXT')
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+    # Add proposal_file column if it doesn't exist
+    try:
+        cursor.execute('ALTER TABLE registrations ADD COLUMN proposal_file TEXT')
+        conn.commit()
+    except sqlite3.OperationalError:
         pass
     
     cursor.execute('''
@@ -380,10 +394,26 @@ def get_admin_notices():
     conn.close()
     return jsonify(notices)
 
-@app.route('/register', methods=['POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
+    if request.method == 'GET':
+        return render_template('register.html')
     try:
-        data = request.get_json()
+        # Support JSON (legacy) and multipart/form-data (new page)
+        is_multipart = request.content_type and 'multipart/form-data' in request.content_type
+        if is_multipart:
+            form = request.form
+            data = {
+                'teamName': form.get('teamName'),
+                'leaderName': form.get('leaderName'),
+                'email': form.get('email'),
+                'university': form.get('university'),
+                'experienceLevel': form.get('experienceLevel'),
+                'theme': form.get('theme'),
+                'githubLink': form.get('githubLink', '')
+            }
+        else:
+            data = request.get_json()
         
         conn = sqlite3.connect('registrations.db')
         cursor = conn.cursor()
@@ -402,9 +432,22 @@ def register():
         import json
         team_members_json = json.dumps(team_members) if team_members else None
         
+        # Optional proposal file upload
+        saved_proposal = None
+        if is_multipart and 'proposal' in request.files:
+            file = request.files['proposal']
+            if file and file.filename and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                unique_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                if not os.path.exists(app.config['UPLOAD_FOLDER']):
+                    os.makedirs(app.config['UPLOAD_FOLDER'])
+                file.save(file_path)
+                saved_proposal = unique_filename
+        
         cursor.execute('''
-            INSERT INTO registrations (team_name, leader_name, email, university, experience_level, theme, team_members)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO registrations (team_name, leader_name, email, university, experience_level, theme, team_members, github_link, proposal_file)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             data['teamName'],
             data['leaderName'],
@@ -412,7 +455,9 @@ def register():
             data['university'],
             data['experienceLevel'],
             data['theme'],
-            team_members_json
+            team_members_json,
+            (data.get('githubLink') if isinstance(data, dict) else ''),
+            saved_proposal
         ))
         
         conn.commit()
@@ -421,7 +466,7 @@ def register():
         # Send confirmation email to team leader
         try:
             msg = Message(
-                subject='NECSprint 2024 - Registration Confirmation',
+                subject='TechSprint - Registration Confirmation',
                 recipients=[data['email']],
                 sender=app.config['MAIL_DEFAULT_SENDER']
             )
@@ -441,11 +486,11 @@ def register():
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>Welcome to NECSprint 2024!</h1>
+                        <h1>Welcome to TechSprint!</h1>
                     </div>
                     <div class="content">
                         <p>Hi <strong>{data['leaderName']}</strong>,</p>
-                        <p>Congratulations! Your team <strong>{data['teamName']}</strong> has been successfully registered for NECSprint 2024!</p>
+                        <p>Congratulations! Your team <strong>{data['teamName']}</strong> has been successfully registered for TechSprint!</p>
                         
                         <div class="details">
                             <h3>Registration Details:</h3>
@@ -486,7 +531,7 @@ def register():
             print(f"Email sending failed: {e}")
             # Continue with registration even if email fails
         
-        return jsonify({'success': True, 'message': 'Registration successful! Welcome to NECSprint 2024! Check your email for confirmation details.'})
+        return jsonify({'success': True, 'message': 'Registration successful! Welcome to TechSprint! Check your email for confirmation details.'})
     
     except sqlite3.IntegrityError:
         return jsonify({'success': False, 'message': 'Email already registered!'})
@@ -499,7 +544,10 @@ def register():
 def get_registrations():
     conn = sqlite3.connect('registrations.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM registrations ORDER BY registration_date DESC')
+    cursor.execute('''
+        SELECT id, team_name, leader_name, email, university, experience_level, theme, team_members, registration_date
+        FROM registrations ORDER BY registration_date DESC
+    ''')
     registrations = cursor.fetchall()
     conn.close()
     
@@ -511,8 +559,8 @@ def get_registrations():
         'university': r[4],
         'experience_level': r[5],
         'theme': r[6],
-        'team_members': r[7] if len(r) > 7 else None,
-        'registration_date': r[8] if len(r) > 8 else r[7]
+        'team_members': r[7],
+        'registration_date': r[8]
     } for r in registrations])
 
 @app.route('/admin/export')
@@ -520,7 +568,10 @@ def get_registrations():
 def export_registrations():
     conn = sqlite3.connect('registrations.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM registrations ORDER BY registration_date DESC')
+    cursor.execute('''
+        SELECT id, team_name, leader_name, email, university, experience_level, theme, team_members, registration_date
+        FROM registrations ORDER BY registration_date DESC
+    ''')
     registrations = cursor.fetchall()
     conn.close()
     
@@ -530,7 +581,7 @@ def export_registrations():
     
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['ID', 'Team Name', 'Leader Name', 'Email', 'University', 'Experience Level', 'Theme', 'Registration Date'])
+    writer.writerow(['ID', 'Team Name', 'Leader Name', 'Email', 'University', 'Experience Level', 'Theme', 'Team Members', 'Registration Date'])
     
     for reg in registrations:
         writer.writerow(reg)

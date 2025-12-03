@@ -16,7 +16,7 @@
 }
 
 body {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     color: var(--light);
     background-color: var(--darker);
     line-height: 1.6;
@@ -24,7 +24,7 @@ body {
 }
 
 h1, h2, h3, h4 {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-weight: 700;
     margin-bottom: 1rem;
 }
@@ -38,6 +38,7 @@ h1, h2, h3, h4 {
 
 section {
     padding: 5rem 0;
+    scroll-margin-top: 90px; /* Ensure anchored sections appear below fixed navbar */
 }
 
 /* Navigation */
@@ -62,9 +63,9 @@ section {
 }
 
 .logo {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 1.8rem;
-    font-weight: 700;
+    font-weight: 800;
     background: var(--gradient);
     -webkit-background-clip: text;
     background-clip: text;
@@ -345,6 +346,14 @@ section {
     margin-bottom: 1rem;
 }
 
+/* Ensure all 5 themes appear in one row on large screens */
+@media (min-width: 1200px) {
+    .theme-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1.5rem;
+    }
+}
+
 /* Schedule Section */
 .schedule {
     background-color: var(--dark);
@@ -417,6 +426,25 @@ section {
     margin-bottom: 0.5rem;
 }
 
+/* Schedule Announcement Card */
+.announcement-card {
+    max-width: 800px;
+    margin: 0 auto;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.announcement-card h3 {
+    color: var(--secondary);
+    margin-bottom: 0.75rem;
+}
+.announcement-card p {
+    color: #cbd5e1;
+}
+
 /* Prizes Section */
 .prizes {
     background-color: var(--dark);
@@ -475,6 +503,17 @@ section {
     color: #c2c7ff;
 }
 
+.prize-pool p {
+    font-size: 2rem;
+    color: #ffffff;
+}
+
+.prize-note {
+    margin-top: 0.75rem;
+    font-size: 0.95rem;
+    color: #cbd5e1;
+}
+
 .prize:nth-child(1) {
     box-shadow: 0 5px 20px rgba(255, 215, 0, 0.2);
 }
@@ -508,6 +547,14 @@ section {
     gap: 2rem;
 }
 
+/* Make FAQ a 3-column grid on large screens (2 rows for 6 items) */
+@media (min-width: 1200px) {
+    .faq-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+    }
+}
+
 .faq-item {
     background: rgba(30, 41, 59, 0.5);
     padding: 2rem;
@@ -529,6 +576,15 @@ section {
 .faq-item p {
     color: #cbd5e1;
     line-height: 1.6;
+}
+
+/* Continuity between consecutive FAQ sections */
+.faq + .faq {
+    padding-top: 2rem;
+}
+.faq + .faq .container {
+    border-top: 1px solid rgba(99, 102, 241, 0.25);
+    padding-top: 2rem;
 }
 
 /* Register Section */
@@ -564,7 +620,7 @@ section {
     border-radius: 8px;
     background: rgba(15, 23, 42, 0.5);
     color: var(--light);
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
 }
 
 .registration-form input:focus,
@@ -604,6 +660,20 @@ section {
     width: auto;
     padding: 0.5rem 1rem;
     margin: 0;
+}
+
+/* CTA Section for registration */
+.cta-section {
+    background: var(--dark);
+    padding: 4rem 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.cta-section h2 {
+    background: var(--gradient);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-size: 2.2rem;
+    margin-bottom: .5rem;
 }
 
 /* Sponsors Section */
@@ -737,6 +807,34 @@ section {
     font-size: 0.9rem;
 }
 
+/* Coming Soon Cards (Sponsors/Judges) */
+.coming-soon-card {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    border-radius: 18px;
+    background: radial-gradient(1200px 400px at 10% 10%, rgba(99,102,241,0.25), transparent 40%),
+                radial-gradient(1200px 400px at 90% 90%, rgba(14,165,233,0.25), transparent 40%),
+                rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+.glow-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 25px rgba(99, 102, 241, 0.35);
+    margin-bottom: 0.5rem;
+}
+.coming-soon-card p {
+    color: #cbd5e1;
+}
+
 /* Resources Section */
 .resources {
     background-color: var(--dark);
@@ -818,7 +916,7 @@ section {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 2rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .footer-section h3 {
@@ -845,26 +943,7 @@ section {
     color: var(--primary);
 }
 
-.social-links {
-    display: flex;
-    gap: 1rem;
-}
-
-.social-links a {
-    width: 40px;
-    height: 40px;
-    background: rgba(99, 102, 241, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-}
-
-.social-links a:hover {
-    background: var(--primary);
-    transform: translateY(-2px);
-}
+/* Removed social links placeholder styles */
 
 .footer-bottom {
     text-align: center;
@@ -872,6 +951,107 @@ section {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     color: #94a3b8;
 }
+
+/* Footer extras: venue + contact */
+.footer-extra {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.footer-map h3, .footer-contact h3 {
+    color: var(--secondary);
+    margin-bottom: 0.75rem;
+}
+
+.footer-venue-name {
+    color: #cbd5e1;
+    margin-bottom: 0.75rem;
+}
+
+.footer-map-card {
+    position: relative;
+    padding-bottom: 45%;
+    height: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    background: rgba(30,41,59,0.5);
+}
+
+.footer-map-card iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 12px;
+}
+
+.contact-block {
+    background: rgba(30,41,59,0.5);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+}
+
+.contact-item + .contact-item {
+    margin-top: 0.75rem;
+}
+
+.contact-label {
+    display: block;
+    font-weight: 600;
+    color: var(--secondary);
+    margin-bottom: 0.25rem;
+}
+
+.contact-value {
+    color: #cbd5e1;
+    text-decoration: none;
+}
+
+.contact-value:hover {
+    color: var(--primary);
+}
+
+@media (max-width: 900px) {
+    .footer-extra {
+        grid-template-columns: 1fr;
+    }
+    .footer-map-card { padding-bottom: 56.25%; }
+}
+
+/* Venue Map Card */
+.venue {
+    background-color: var(--dark);
+}
+.map-card {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    border-radius: 16px;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    background: rgba(30,41,59,0.5);
+}
+.map-card iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 16px;
+}
+
+/* Participant Essentials styles removed */
 
 /* Responsive Design */
 @media (max-width: 768px) {
