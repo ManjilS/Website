@@ -16,7 +16,7 @@ ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx'}
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 CORS(app)
-app.secret_key = 'necsprint-admin-secret-key-2024'  # Change this in production
+app.secret_key = os.environ.get('SECRET_KEY', 'necsprint-admin-secret-key-2024-change-in-production')
 
 # Email configuration - Using a simple SMTP setup
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -51,6 +51,7 @@ def init_db():
             team_name TEXT NOT NULL,
             leader_name TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE,
+            phone TEXT,
             university TEXT NOT NULL,
             theme TEXT NOT NULL,
             team_members TEXT,
@@ -111,6 +112,12 @@ def init_db():
     # Add proposal_file column if it doesn't exist
     try:
         cursor.execute('ALTER TABLE registrations ADD COLUMN proposal_file TEXT')
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+    # Add phone column if it doesn't exist
+    try:
+        cursor.execute('ALTER TABLE registrations ADD COLUMN phone TEXT')
         conn.commit()
     except sqlite3.OperationalError:
         pass
@@ -441,6 +448,7 @@ def register():
                 'teamName': form.get('teamName'),
                 'leaderName': form.get('leaderName'),
                 'email': form.get('email'),
+                'phone': form.get('phone', ''),
                 'university': form.get('university'),
                 'theme': form.get('theme'),
                 'githubLink': form.get('githubLink', '')
@@ -479,12 +487,13 @@ def register():
                 saved_proposal = unique_filename
         
         cursor.execute('''
-            INSERT INTO registrations (team_name, leader_name, email, university, theme, team_members, github_link, proposal_file)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO registrations (team_name, leader_name, email, phone, university, theme, team_members, github_link, proposal_file)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             data['teamName'],
             data['leaderName'],
             data['email'],
+            data.get('phone', ''),
             data['university'],
             data['theme'],
             team_members_json,
@@ -576,7 +585,7 @@ def get_registrations():
     conn = sqlite3.connect('registrations.db')
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT id, team_name, leader_name, email, university, theme, team_members, registration_date
+        SELECT id, team_name, leader_name, email, phone, university, theme, team_members, registration_date
         FROM registrations ORDER BY registration_date DESC
     ''')
     registrations = cursor.fetchall()
@@ -587,10 +596,11 @@ def get_registrations():
         'team_name': r[1],
         'leader_name': r[2],
         'email': r[3],
-        'university': r[4],
-        'theme': r[5],
-        'team_members': r[6],
-        'registration_date': r[7]
+        'phone': r[4],
+        'university': r[5],
+        'theme': r[6],
+        'team_members': r[7],
+        'registration_date': r[8]
     } for r in registrations])
 
 @app.route('/admin/export')
@@ -599,7 +609,7 @@ def export_registrations():
     conn = sqlite3.connect('registrations.db')
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT id, team_name, leader_name, email, university, theme, team_members, registration_date
+        SELECT id, team_name, leader_name, email, phone, university, theme, team_members, registration_date
         FROM registrations ORDER BY registration_date DESC
     ''')
     registrations = cursor.fetchall()
@@ -611,7 +621,7 @@ def export_registrations():
     
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['ID', 'Team Name', 'Leader Name', 'Email', 'University', 'Theme', 'Team Members', 'Registration Date'])
+    writer.writerow(['ID', 'Team Name', 'Leader Name', 'Email', 'Phone', 'University', 'Theme', 'Team Members', 'Registration Date'])
     
     for reg in registrations:
         writer.writerow(reg)
@@ -831,4 +841,5 @@ def public_announcements():
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
