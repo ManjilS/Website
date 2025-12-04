@@ -52,7 +52,6 @@ def init_db():
             leader_name TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE,
             university TEXT NOT NULL,
-            experience_level TEXT NOT NULL,
             theme TEXT NOT NULL,
             team_members TEXT,
             github_link TEXT,
@@ -60,6 +59,41 @@ def init_db():
             registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    # Migrate old schema: drop experience_level if still present
+    try:
+        cursor.execute("PRAGMA table_info(registrations)")
+        cols = [row[1] for row in cursor.fetchall()]
+        if 'experience_level' in cols:
+            # Attempt direct drop (SQLite >= 3.35 supports DROP COLUMN)
+            try:
+                cursor.execute('ALTER TABLE registrations DROP COLUMN experience_level')
+                conn.commit()
+            except sqlite3.OperationalError:
+                # Fallback: recreate table without experience_level
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS registrations_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        team_name TEXT NOT NULL,
+                        leader_name TEXT NOT NULL,
+                        email TEXT NOT NULL UNIQUE,
+                        university TEXT NOT NULL,
+                        theme TEXT NOT NULL,
+                        team_members TEXT,
+                        github_link TEXT,
+                        proposal_file TEXT,
+                        registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+                cursor.execute('''
+                    INSERT INTO registrations_new (id, team_name, leader_name, email, university, theme, team_members, github_link, proposal_file, registration_date)
+                    SELECT id, team_name, leader_name, email, university, theme, team_members, github_link, proposal_file, registration_date FROM registrations
+                ''')
+                cursor.execute('DROP TABLE registrations')
+                cursor.execute('ALTER TABLE registrations_new RENAME TO registrations')
+                conn.commit()
+    except Exception:
+        pass
     
     # Add team_members column if it doesn't exist
     try:
@@ -408,7 +442,6 @@ def register():
                 'leaderName': form.get('leaderName'),
                 'email': form.get('email'),
                 'university': form.get('university'),
-                'experienceLevel': form.get('experienceLevel'),
                 'theme': form.get('theme'),
                 'githubLink': form.get('githubLink', '')
             }
@@ -446,14 +479,13 @@ def register():
                 saved_proposal = unique_filename
         
         cursor.execute('''
-            INSERT INTO registrations (team_name, leader_name, email, university, experience_level, theme, team_members, github_link, proposal_file)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO registrations (team_name, leader_name, email, university, theme, team_members, github_link, proposal_file)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             data['teamName'],
             data['leaderName'],
             data['email'],
             data['university'],
-            data['experienceLevel'],
             data['theme'],
             team_members_json,
             (data.get('githubLink') if isinstance(data, dict) else ''),
@@ -500,7 +532,6 @@ def register():
                                 <li><strong>Email:</strong> {data['email']}</li>
                                 <li><strong>University:</strong> {data['university']}</li>
                                 <li><strong>Theme:</strong> {data['theme'].upper()}</li>
-                                <li><strong>Experience Level:</strong> {data['experienceLevel'].title()}</li>
                             </ul>
                         </div>
                         
@@ -545,7 +576,7 @@ def get_registrations():
     conn = sqlite3.connect('registrations.db')
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT id, team_name, leader_name, email, university, experience_level, theme, team_members, registration_date
+        SELECT id, team_name, leader_name, email, university, theme, team_members, registration_date
         FROM registrations ORDER BY registration_date DESC
     ''')
     registrations = cursor.fetchall()
@@ -557,10 +588,9 @@ def get_registrations():
         'leader_name': r[2],
         'email': r[3],
         'university': r[4],
-        'experience_level': r[5],
-        'theme': r[6],
-        'team_members': r[7],
-        'registration_date': r[8]
+        'theme': r[5],
+        'team_members': r[6],
+        'registration_date': r[7]
     } for r in registrations])
 
 @app.route('/admin/export')
@@ -569,7 +599,7 @@ def export_registrations():
     conn = sqlite3.connect('registrations.db')
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT id, team_name, leader_name, email, university, experience_level, theme, team_members, registration_date
+        SELECT id, team_name, leader_name, email, university, theme, team_members, registration_date
         FROM registrations ORDER BY registration_date DESC
     ''')
     registrations = cursor.fetchall()
@@ -581,7 +611,7 @@ def export_registrations():
     
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['ID', 'Team Name', 'Leader Name', 'Email', 'University', 'Experience Level', 'Theme', 'Team Members', 'Registration Date'])
+    writer.writerow(['ID', 'Team Name', 'Leader Name', 'Email', 'University', 'Theme', 'Team Members', 'Registration Date'])
     
     for reg in registrations:
         writer.writerow(reg)
