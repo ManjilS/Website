@@ -6,6 +6,7 @@ from datetime import datetime
 import os
 from functools import wraps
 from werkzeug.utils import secure_filename
+import time
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -513,6 +514,11 @@ def register():
                 file.save(file_path)
                 saved_proposal = unique_filename
         
+        # Acquire an IMMEDIATE transaction to reduce contention
+        try:
+            conn.execute('BEGIN IMMEDIATE')
+        except sqlite3.OperationalError:
+            pass
         execute_with_retry(cursor, '''
             INSERT INTO registrations (team_name, leader_name, email, phone, university, theme, team_members, github_link, proposal_file)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
