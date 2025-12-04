@@ -27,7 +27,22 @@ DB_PATH = os.environ.get('DATABASE_PATH', 'registrations.db')
 def get_conn():
     # Use a connection timeout and allow cross-thread access in Gunicorn workers
     conn = sqlite3.connect(DB_PATH, timeout=10, check_same_thread=False)
+    try:
+        conn.execute('PRAGMA busy_timeout=5000')
+    except Exception:
+        pass
     return conn
+
+def execute_with_retry(cursor, query, params=(), retries=5, delay=0.2):
+    for attempt in range(retries):
+        try:
+            cursor.execute(query, params)
+            return True
+        except sqlite3.OperationalError as e:
+            if 'database is locked' in str(e).lower() and attempt < retries - 1:
+                time.sleep(delay)
+                continue
+            raise
 
 # Admin credentials (in production, use environment variables or database)
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
@@ -498,7 +513,7 @@ def register():
                 file.save(file_path)
                 saved_proposal = unique_filename
         
-        cursor.execute('''
+        execute_with_retry(cursor, '''
             INSERT INTO registrations (team_name, leader_name, email, phone, university, theme, team_members, github_link, proposal_file)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
