@@ -56,30 +56,74 @@
 
     
 
-<section id="about" class="about">
-        <div class="container">
-            <h2>About necSprint 2026</h2>
-            <p>Join developers, designers, and innovators for an intensive 48-hour hackathon where creativity meets technology. Build solutions that matter.</p>
-            <div class="features">
-                <div class="feature">
-                    <i class="fas fa-lightbulb"></i>
-                    <h3>Innovation</h3>
-                    <p>Create groundbreaking solutions</p>
-                </div>
-                <div class="feature">
-                    <i class="fas fa-users"></i>
-                    <h3>Collaboration</h3>
-                    <p>Work with talented teams</p>
-                </div>
-                <div class="feature">
-                    <i class="fas fa-graduation-cap"></i>
-                    <h3>Learning</h3>
-                    <p>Gain new skills and experience</p>
-                </div>
+    
+
+<!-- About: Cybersecurity Symposium 2026 -->
+<section id="about-cyber" class="about">
+    <div class="container">
+        <h2>About Cybersecurity Symposium 2026</h2>
+        <p>A focused symposium on security practices, threat intelligence, and building resilient systems. Learn from experts and sharpen your defenses.</p>
+        <div class="features">
+            <div class="feature">
+                <i class="fas fa-shield-halved"></i>
+                <h3>Defense</h3>
+                <p>Best practices for secure architectures.</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-bug"></i>
+                <h3>Threats</h3>
+                <p>Understand vulnerabilities and mitigations.</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-lock"></i>
+                <h3>Compliance</h3>
+                <p>Policies, governance, and standards.</p>
             </div>
         </div>
+    </div>
     </section>
-    
+
+<!-- About: TechSprint 2026 -->
+<section id="about" class="about">
+    <div class="container">
+        <h2>About TechSprint 2026</h2>
+        <p>Join developers, designers, and innovators for an intensive 48-hour hackathon where creativity meets technology. Build solutions that matter.</p>
+        <div class="features">
+            <div class="feature">
+                <i class="fas fa-lightbulb"></i>
+                <h3>Innovation</h3>
+                <p>Create groundbreaking solutions</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-users"></i>
+                <h3>Collaboration</h3>
+                <p>Work with talented teams</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-graduation-cap"></i>
+                <h3>Learning</h3>
+                <p>Gain new skills and experience</p>
+            </div>
+        </div>
+    </div>
+    </section>
+    <!-- Co-Organized By Section (below About) -->
+    <section id="coorganized" class="themes">
+        <div class="container"  >
+            <h2>Co-Organized By</h2>
+            <p>Collaboratively organized by our partner communities and departments.</p>
+            <div class="theme-grid" style="display: flex; justify-content: center;">
+                <div class="theme">
+                    <div class="theme-logo">
+                        <img src="{{ url_for('static', filename='nepal_govt_logo.png') }}" alt="Government of Nepal" />
+                    </div>
+                    <h3>Ministry of Education, Science and Technology</h3>
+                    <p>Academic leadership and coordination.</p>
+                    
+                </div>
+           </div>
+        </div>
+    </section>
 
     <section id="themes" class="themes">
         <div class="container">
@@ -218,6 +262,69 @@
             <p style="color:#cbd5e1; max-width:720px; margin:0.5rem auto 1.25rem;">What are you waiting for join TechSprint and turn ideas into reality.
             Team up, code hard, and have fun along the way.</p>
             <a class="btn primary" href="/register" style="font-weight:700; padding:1rem 2.25rem;">Register Now</a>
+        </div>
+    </section>
+
+    <!-- Supported By Section (below Ready to build CTA) -->
+    <section id="supported" class="themes">
+        <div class="container">
+            <h2>Supported By</h2>
+            <p>With generous support from our partners and sponsors.</p>
+            <div class="theme-grid" style="display: flex; justify-content: center;">
+                <div class="theme">
+                    <div class="theme-logo">
+                        <img src="{{ url_for('static', filename='pu_logo.png') }}" alt="Government of Nepal" />
+                    </div>
+                    <h3>Pokhara University</h3>
+                    <p>Academic leadership and coordination.</p>
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Team Section (above Footer) -->
+    <section id="team" class="themes">
+        <div class="container">
+            <h2>Our Team</h2>
+            <p>Meet the organizers and core contributors behind TechSprint.</p>
+            <div class="theme-grid">
+                <div class="theme">
+                    <div class="theme-logo">
+                        <img src="{{ url_for('static', filename='pu_logo.png') }}" alt="Government of Nepal" />
+                    </div>
+                    <h3>Event Lead</h3>
+                    <p>Oversees planning and execution.</p>
+                </div>
+                <div class="theme">
+                    <div class="theme-logo">
+                        <img src="{{ url_for('static', filename='pu_logo.png') }}" alt="Government of Nepal" />
+                    </div>
+                    <h3>Technical Lead</h3>
+                    <p>Platform, tooling, and live operations.</p>
+                </div>
+                <div class="theme">
+                    <div class="theme-logo">
+                        <img src="{{ url_for('static', filename='pu_logo.png') }}" alt="Government of Nepal" />
+                    </div>
+                    <h3>Comms & Outreach</h3>
+                    <p>Announcements, partner relations, and PR.</p>
+                </div>
+                <div class="theme">
+                    <div class="theme-logo">
+                        <img src="{{ url_for('static', filename='pu_logo.png') }}" alt="Government of Nepal" />
+                    </div>
+                    <h3>Comms & Outreach</h3>
+                    <p>Announcements, partner relations, and PR.</p>
+                </div>
+                <div class="theme">
+                    <div class="theme-logo">
+                        <img src="{{ url_for('static', filename='pu_logo.png') }}" alt="Government of Nepal" />
+                    </div>
+                    <h3>Comms & Outreach</h3>
+                    <p>Announcements, partner relations, and PR.</p>
+                </div>
+            </div>
         </div>
     </section>
 

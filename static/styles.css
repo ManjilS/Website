@@ -122,9 +122,9 @@ section {
     min-height: 100vh;
     display: flex;
     align-items: center;
-    background: linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)), 
-                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%236366f1" fill-opacity="0.2" d="M0,128L48,117.3C96,107,192,85,288,112C384,139,480,213,576,224C672,235,768,181,864,160C960,139,1056,149,1152,165.3C1248,181,1344,203,1392,213.3L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
-    background-size: cover;
+    /* Slightly reduce overlay transparency to reveal background image more */
+    background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)),
+                url('/static/bg.png') center/cover no-repeat;
     position: relative;
     overflow: hidden;
 }
@@ -346,11 +346,42 @@ section {
     margin-bottom: 1rem;
 }
 
+/* Logo container for partner cards */
+.theme-logo {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-logo img {
+    max-height: 64px;
+    width: auto;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.25));
+}
+
 /* Ensure all 5 themes appear in one row on large screens */
 @media (min-width: 1200px) {
     .theme-grid {
         grid-template-columns: repeat(5, 1fr);
         gap: 1.5rem;
+    }
+}
+
+/* Side-by-side layout for Co-Organized and Supported sections */
+#coorganized .theme-grid,
+#supported .theme-grid {
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+}
+
+@media (max-width: 800px) {
+    #coorganized .theme-grid,
+    #supported .theme-grid {
+        grid-template-columns: 1fr;
     }
 }
 
