@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 from flask_cors import CORS
-from flask_mail import Mail, Message
+# Removed email sending to simplify deployment on Render
 import sqlite3
 from datetime import datetime
 import os
@@ -19,16 +19,15 @@ CORS(app)
 app.secret_key = os.environ.get('SECRET_KEY', 'necsprint-admin-secret-key-2024-change-in-production')
 
 # Email configuration - Using a simple SMTP setup
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'coess@gmail.com')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'your-app-password')
-app.config['MAIL_DEFAULT_SENDER'] = ('NECSprint Team', 'coess@gmail.com')
-app.config['MAIL_SUPPRESS_SEND'] = False
+# Mail configuration removed
 
-mail = Mail(app)
+# Database configuration
+DB_PATH = os.environ.get('DATABASE_PATH', 'registrations.db')
+
+def get_conn():
+    # Use a connection timeout and allow cross-thread access in Gunicorn workers
+    conn = sqlite3.connect(DB_PATH, timeout=10, check_same_thread=False)
+    return conn
 
 # Admin credentials (in production, use environment variables or database)
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
@@ -43,8 +42,21 @@ def login_required(f):
     return decorated_function
 
 def init_db():
-    conn = sqlite3.connect('registrations.db')
+    # Ensure directory exists for DB_PATH if a nested path is provided
+    try:
+        db_dir = os.path.dirname(DB_PATH)
+        if db_dir and not os.path.exists(db_dir):
+            os.makedirs(db_dir, exist_ok=True)
+    except Exception:
+        pass
+
+    conn = get_conn()
     cursor = conn.cursor()
+    # Enable WAL for better concurrency on Render
+    try:
+        cursor.execute('PRAGMA journal_mode=WAL')
+    except Exception:
+        pass
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS registrations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -254,7 +266,7 @@ def add_notice():
             original_filename = filename
             file_path = unique_filename
     
-    conn = sqlite3.connect('registrations.db')
+    conn = get_conn()
     cursor = conn.cursor()
     cursor.execute('INSERT INTO notices (content, file_path, original_filename) VALUES (?, ?, ?)', 
                    (content, file_path, original_filename))
@@ -265,7 +277,7 @@ def add_notice():
 @app.route('/admin/delete-notice/<int:notice_id>', methods=['DELETE'])
 @login_required
 def delete_notice(notice_id):
-    conn = sqlite3.connect('registrations.db')
+    conn = get_conn()
     cursor = conn.cursor()
     cursor.execute('DELETE FROM notices WHERE id = ?', (notice_id,))
     conn.commit()
@@ -304,7 +316,7 @@ def upload_document():
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         file.save(file_path)
         
-        conn = sqlite3.connect('registrations.db')
+        conn = get_conn()
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO documents (title, description, filename, original_filename, file_type)
@@ -320,7 +332,7 @@ def upload_document():
 @app.route('/admin/documents')
 @login_required
 def get_admin_documents():
-    conn = sqlite3.connect('registrations.db')
+    conn = get_conn()
     cursor = conn.cursor()
     cursor.execute('SELECT id, title, description, original_filename, file_type, created_at FROM documents ORDER BY created_at DESC')
     documents = [{
@@ -333,7 +345,7 @@ def get_admin_documents():
 @app.route('/admin/delete-document/<int:doc_id>', methods=['DELETE'])
 @login_required
 def delete_document(doc_id):
-    conn = sqlite3.connect('registrations.db')
+    conn = get_conn()
     cursor = conn.cursor()
     cursor.execute('SELECT filename FROM documents WHERE id = ?', (doc_id,))
     result = cursor.fetchone()
@@ -456,7 +468,7 @@ def register():
         else:
             data = request.get_json()
         
-        conn = sqlite3.connect('registrations.db')
+        conn = get_conn()
         cursor = conn.cursor()
         
         # Process team members
@@ -504,72 +516,7 @@ def register():
         conn.commit()
         conn.close()
         
-        # Send confirmation email to team leader
-        try:
-            msg = Message(
-                subject='TechSprint - Registration Confirmation',
-                recipients=[data['email']],
-                sender=app.config['MAIL_DEFAULT_SENDER']
-            )
-            msg.html = f'''
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <style>
-                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                    .header {{ background: linear-gradient(135deg, #6366f1, #0ea5e9); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-                    .content {{ background: #f8f9fa; padding: 20px; border-radius: 0 0 10px 10px; }}
-                    .details {{ background: white; padding: 15px; border-radius: 5px; margin: 15px 0; }}
-                    .footer {{ text-align: center; margin-top: 20px; color: #666; }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Welcome to TechSprint!</h1>
-                    </div>
-                    <div class="content">
-                        <p>Hi <strong>{data['leaderName']}</strong>,</p>
-                        <p>Congratulations! Your team <strong>{data['teamName']}</strong> has been successfully registered for TechSprint!</p>
-                        
-                        <div class="details">
-                            <h3>Registration Details:</h3>
-                            <ul>
-                                <li><strong>Team Name:</strong> {data['teamName']}</li>
-                                <li><strong>Team Leader:</strong> {data['leaderName']}</li>
-                                <li><strong>Email:</strong> {data['email']}</li>
-                                <li><strong>University:</strong> {data['university']}</li>
-                                <li><strong>Theme:</strong> {data['theme'].upper()}</li>
-                            </ul>
-                        </div>
-                        
-                        <p>We're excited to have you participate in this amazing 48-hour hackathon! Get ready to innovate, collaborate, and build something incredible.</p>
-                        
-                        <p><strong>What's Next?</strong></p>
-                        <ul>
-                            <li>We'll send you event details and schedule soon</li>
-                            <li>Check our website for resources and updates</li>
-                            <li>Start thinking about your project ideas!</li>
-                        </ul>
-                        
-                        <div class="footer">
-                            <p>Best regards,<br><strong>NECSprint Team</strong></p>
-                            <p><small>If you have any questions, reply to this email or contact us at coess@gmail.com</small></p>
-                        </div>
-                    </div>
-                </div>
-            </body>
-            </html>
-            '''
-            
-            # Try to send email, but don't fail registration if email fails
-            mail.send(msg)
-            print(f"Confirmation email sent to {data['email']}")
-            
-        except Exception as e:
-            print(f"Email sending failed: {e}")
-            # Continue with registration even if email fails
+        # Email sending removed for Render deployment stability
         
         return jsonify({'success': True, 'message': 'Registration successful! Welcome to TechSprint! Check your email for confirmation details.'})
     
@@ -582,7 +529,7 @@ def register():
 @app.route('/registrations', methods=['GET'])
 @login_required
 def get_registrations():
-    conn = sqlite3.connect('registrations.db')
+    conn = get_conn()
     cursor = conn.cursor()
     cursor.execute('''
         SELECT id, team_name, leader_name, email, phone, university, theme, team_members, registration_date
